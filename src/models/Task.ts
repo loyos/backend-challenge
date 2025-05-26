@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Workflow } from './Workflow';
-import {TaskStatus} from "../workers/taskRunner";
+import { TaskStatus } from '../workers/taskRunner';
 
 @Entity({ name: 'tasks' })
 export class Task {
@@ -28,6 +28,9 @@ export class Task {
     @Column({ default: 1 })
     stepNumber!: number;
 
-    @ManyToOne(() => Workflow, workflow => workflow.tasks)
+    @ManyToOne(() => Workflow, (workflow) => workflow.tasks)
     workflow!: Workflow;
+
+    @Column({ nullable: true, type: 'text' })
+    dependency?: string; // The task this task depends on
 }

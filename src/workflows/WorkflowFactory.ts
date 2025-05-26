@@ -3,23 +3,25 @@ import * as yaml from 'js-yaml';
 import { DataSource } from 'typeorm';
 import { Workflow } from '../models/Workflow';
 import { Task } from '../models/Task';
-import {TaskStatus} from "../workers/taskRunner";
+import { TaskStatus } from '../workers/taskRunner';
 
 export enum WorkflowStatus {
     Initial = 'initial',
     InProgress = 'in_progress',
     Completed = 'completed',
-    Failed = 'failed'
+    Failed = 'failed',
 }
 
 interface WorkflowStep {
     taskType: string;
     stepNumber: number;
+    dependsOn: string;
 }
 
 interface WorkflowDefinition {
     name: string;
     steps: WorkflowStep[];
+    dependsOn: string;
 }
 
 export class WorkflowFactory {
@@ -32,7 +34,11 @@ export class WorkflowFactory {
      * @param geoJson - The geoJson data string for tasks (customize as needed).
      * @returns A promise that resolves to the created Workflow.
      */
-    async createWorkflowFromYAML(filePath: string, clientId: string, geoJson: string): Promise<Workflow> {
+    async createWorkflowFromYAML(
+        filePath: string,
+        clientId: string,
+        geoJson: string
+    ): Promise<Workflow> {
         const fileContent = fs.readFileSync(filePath, 'utf8');
         const workflowDef = yaml.load(fileContent) as WorkflowDefinition;
         const workflowRepository = this.dataSource.getRepository(Workflow);
@@ -44,7 +50,7 @@ export class WorkflowFactory {
 
         const savedWorkflow = await workflowRepository.save(workflow);
 
-        const tasks: Task[] = workflowDef.steps.map(step => {
+        const tasks: Task[] = workflowDef.steps.map((step) => {
             const task = new Task();
             task.clientId = clientId;
             task.geoJson = geoJson;
@@ -52,6 +58,7 @@ export class WorkflowFactory {
             task.taskType = step.taskType;
             task.stepNumber = step.stepNumber;
             task.workflow = savedWorkflow;
+            task.dependency = step.dependsOn || undefined; // Set dependency if exists
             return task;
         });
 

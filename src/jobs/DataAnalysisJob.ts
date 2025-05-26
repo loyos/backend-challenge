@@ -11,10 +11,19 @@ export class DataAnalysisJob implements Job {
         const inputGeometry: Feature<Polygon> = JSON.parse(task.geoJson);
 
         for (const countryFeature of countryMapping.features) {
-            if (countryFeature.geometry.type === 'Polygon' || countryFeature.geometry.type === 'MultiPolygon') {
-                const isWithin = booleanWithin(inputGeometry, countryFeature as Feature<Polygon>);
+            if (
+                countryFeature.geometry.type === 'Polygon' ||
+                countryFeature.geometry.type === 'MultiPolygon'
+            ) {
+                const isWithin = booleanWithin(
+                    inputGeometry,
+                    countryFeature as Feature<Polygon>
+                );
                 if (isWithin) {
-                    console.log(`The polygon is within ${countryFeature.properties?.name}`);
+                    console.log(
+                        `The polygon is within ${countryFeature.properties?.name}`
+                    );
+                    // await new Promise((resolve) => setTimeout(resolve, 20000)); // let's simulate a long-running job
                     return countryFeature.properties?.name;
                 }
             }
